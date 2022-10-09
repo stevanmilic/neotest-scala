@@ -361,9 +361,7 @@ local function scalatest_framework()
         local test_results = {}
         local test_namespace = nil
         for _, line in ipairs(output_lines) do
-            vim.pretty_print(line)
             line = vim.trim(strip_sbt_info_prefix(strip_ainsi_chars(line)))
-            vim.pretty_print(line)
             local current_namespace = get_test_namespace(line)
             if current_namespace and (not test_namespace or test_namespace ~= current_namespace) then
                 test_namespace = current_namespace

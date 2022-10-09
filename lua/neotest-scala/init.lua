@@ -148,7 +148,6 @@ local function get_results(tree, test_results, match_func)
         if no_results then
             results[position.id] = { status = TEST_FAILED }
         else
-            vim.pretty_print(position.id)
             local test_result
             if match_func then
                 test_result = match_func(test_results, position.id)
@@ -174,7 +173,6 @@ function ScalaNeotestAdapter.results(_, result, tree)
         return {}
     end
     local test_results = framework.get_test_results(lines)
-    vim.pretty_print(test_results)
     return get_results(tree, test_results, framework.match_func)
 end
 
