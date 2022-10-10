@@ -116,6 +116,25 @@ local function get_project_name(path)
     return nil
 end
 
+---Builds strategy configuration for running tests.
+---@param strategy string
+---@param position neotest.Position
+---@return table|nil
+local function get_strategy_config(strategy, position)
+    if strategy == "dap" and position.type ~= "dir" then
+        return {
+            type = "scala",
+            request = "launch",
+            name = "NeotestScala",
+            metals = {
+                runType = "testFile",
+                path = position.path,
+            },
+        }
+    end
+    return nil
+end
+
 ---@async
 ---@param args neotest.RunArgs
 ---@return neotest.RunSpec
@@ -131,8 +150,8 @@ function ScalaNeotestAdapter.build_spec(args)
     end
     local extra_args = vim.list_extend(get_args(), args.extra_args or {})
     local command = framework.build_command(runner, project, args.tree, utils.get_position_name(position), extra_args)
-    -- TODO: Add support for nvim-dap strategy.
-    return { command = command }
+    local strategy = get_strategy_config(args.strategy, position)
+    return { command = command, strategy = strategy }
 end
 
 ---Extract results from the test output.

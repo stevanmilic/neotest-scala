@@ -2,6 +2,8 @@
 
 [Neotest](https://github.com/rcarriga/neotest) adapter for scala. Supports [utest](https://github.com/com-lihaoyi/utest), [munit](https://scalameta.org/munit/docs/getting-started.html) and [ScalaTest](https://www.scalatest.org/) test frameworks, by either running it with [bloop](https://scalacenter.github.io/bloop/) or sbt. Note that for ScalaTest the only supported style is FunSuite for now.
 
+It also supports debugging tests with [nvim-dap](https://github.com/rcarriga/nvim-dap) (requires [nvim-metals](https://github.com/scalameta/nvim-metals)), at the moment you can only debug a specific test file (hint: use breakpoints on test functions to breakdown execution). Once [passing arguments to test framework](https://github.com/scalameta/metals-feature-requests/issues/216) is completed in metals, debugging specific test case could be done.
+
 Requires [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) and the parser for scala.
 
 ## Installation
@@ -55,5 +57,4 @@ require("neotest").setup({
 
 To be implemented:
 
-- Support for nvim-dap
 - Displaying errors in diagnostics
