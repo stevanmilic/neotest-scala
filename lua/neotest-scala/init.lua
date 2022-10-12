@@ -98,9 +98,19 @@ local function get_framework()
     return "utest"
 end
 
+---Get first project name from bloop projects.
+---@return string|nil
+local function get_bloop_project_name()
+    local command = "bloop projects"
+    local handle = assert(io.popen(command), string.format("unable to execute: [%s]", command))
+    local result = handle:read("*l")
+    handle:close()
+    return result
+end
+
 ---Get project name from build file.
 ---@return string|nil
-local function get_project_name(path)
+local function get_project_name(path, runner)
     local root = ScalaNeotestAdapter.root(path)
     local build_file = root .. "/build.sbt"
     local success, lines = pcall(lib.files.read_lines, build_file)
@@ -108,9 +118,15 @@ local function get_project_name(path)
         return nil
     end
     for _, line in ipairs(lines) do
-        local project = line:match('name := "(.+)"')
+        local project = line:match('^name := "(.+)"')
         if project then
             return project
+        end
+    end
+    if runner == "bloop" then
+        local bloop_project = get_bloop_project_name()
+        if bloop_project then
+            return bloop_project
         end
     end
     return nil
@@ -140,10 +156,10 @@ end
 ---@return neotest.RunSpec
 function ScalaNeotestAdapter.build_spec(args)
     local position = args.tree:data()
-    local project = get_project_name(position.path)
-    assert(project, "scala project not found in the build file")
     local runner = get_runner()
     assert(lib.func_util.index({ "bloop", "sbt" }, runner), "set sbt or bloop runner")
+    local project = get_project_name(position.path, runner)
+    assert(project, "scala project not found in the build file")
     local framework = fw.get_framework_class(get_framework())
     if not framework then
         return {}
