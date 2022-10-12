@@ -40,7 +40,7 @@ local function build_position_id(position, parents)
             return ""
         end
         if pos.type == "namespace" then
-            return utils.get_package_name(pos.path) .. "." .. pos.name
+            return utils.get_package_name(pos.path) .. pos.name
         end
         return utils.get_position_name(pos)
     end

@@ -69,7 +69,7 @@ local function utest_framework()
         if parent_tree and parent_tree:data().type == "namespace" then
             local package = utils.get_package_name(parent_tree:data().path)
             local parent_name = parent_tree:data().name
-            return package .. "." .. parent_name .. "." .. name
+            return package .. parent_name .. "." .. name
         end
         if parent_tree and parent_tree:data().type == "test" then
             local parent_pos = parent_tree:data()
@@ -80,7 +80,7 @@ local function utest_framework()
             if not package then
                 return nil
             end
-            return package .. "." .. name
+            return package .. name
         end
         if type == "file" then
             local test_suites = {}
@@ -91,7 +91,7 @@ local function utest_framework()
             end
             if test_suites then
                 local package = utils.get_package_name(tree:data().path)
-                return package .. "." .. "{" .. table.concat(test_suites, ",") .. "}"
+                return package .. "{" .. table.concat(test_suites, ",") .. "}"
             end
         end
         if type == "dir" then
@@ -101,7 +101,7 @@ local function utest_framework()
                 if child:data().type == "namespace" then
                     local package = utils.get_package_name(child:data().path)
                     if package and not visited[package] then
-                        table.insert(packages, package)
+                        table.insert(packages, package:sub(1, -2))
                         visited[package] = true
                     end
                 end
@@ -172,7 +172,7 @@ local function munit_framework()
         if parent_tree and parent_tree:data().type == "namespace" then
             local package = utils.get_package_name(parent_tree:data().path)
             local parent_name = parent_tree:data().name
-            return package .. "." .. parent_name .. "." .. name
+            return package .. parent_name .. "." .. name
         end
         if parent_tree and parent_tree:data().type == "test" then
             local parent_pos = parent_tree:data()
@@ -183,7 +183,7 @@ local function munit_framework()
             if not package then
                 return nil
             end
-            return package .. "." .. name .. ".*"
+            return package .. name .. ".*"
         end
         if type == "file" then
             local test_suites = {}
@@ -194,7 +194,7 @@ local function munit_framework()
             end
             if test_suites then
                 local package = utils.get_package_name(tree:data().path)
-                return package .. ".*"
+                return package .. "*"
             end
         end
         if type == "dir" then
@@ -274,7 +274,7 @@ local function scalatest_framework()
         if parent_tree and parent_tree:data().type == "namespace" then
             local package = utils.get_package_name(parent_tree:data().path)
             local parent_name = parent_tree:data().name
-            return package .. "." .. parent_name
+            return package .. parent_name
         end
         if parent_tree and parent_tree:data().type == "test" then
             return nil
@@ -284,7 +284,7 @@ local function scalatest_framework()
             if not package then
                 return nil
             end
-            return package .. "." .. name
+            return package .. name
         end
         if type == "file" then
             local test_suites = {}
@@ -295,7 +295,7 @@ local function scalatest_framework()
             end
             if test_suites then
                 local package = utils.get_package_name(tree:data().path)
-                return package .. ".*"
+                return package .. "*"
             end
         end
         if type == "dir" then

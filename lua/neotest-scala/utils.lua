@@ -21,7 +21,10 @@ function M.get_package_name(file)
         return nil
     end
     local line = lines[1]
-    return vim.startswith(line, "package") and vim.split(line, " ")[2] or ""
+    if vim.startswith(line, "package") then
+        return vim.split(line, " ")[2] .. "."
+    end
+    return ""
 end
 
 return M
