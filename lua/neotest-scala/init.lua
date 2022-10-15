@@ -30,20 +30,22 @@ function ScalaNeotestAdapter.filter_dir(_, _, _)
     return true
 end
 
+---@param pos neotest.Position
+---@return string
+local get_parent_name = function(pos)
+    if pos.type == "dir" or pos.type == "file" then
+        return ""
+    end
+    if pos.type == "namespace" then
+        return utils.get_package_name(pos.path) .. pos.name
+    end
+    return utils.get_position_name(pos)
+end
+
 ---@param position neotest.Position The position to return an ID for
 ---@param parents neotest.Position[] Parent positions for the position
 ---@return string
 local function build_position_id(position, parents)
-    ---@param pos neotest.Position
-    local get_parent_name = function(pos)
-        if pos.type == "dir" or pos.type == "file" then
-            return ""
-        end
-        if pos.type == "namespace" then
-            return utils.get_package_name(pos.path) .. pos.name
-        end
-        return utils.get_position_name(pos)
-    end
     return table.concat(
         vim.tbl_flatten({
             vim.tbl_map(get_parent_name, parents),
@@ -134,10 +136,15 @@ end
 
 ---Builds strategy configuration for running tests.
 ---@param strategy string
----@param position neotest.Position
+---@param tree neotest.Tree
+---@param project string
 ---@return table|nil
-local function get_strategy_config(strategy, position)
-    if strategy == "dap" and position.type ~= "dir" then
+local function get_strategy_config(strategy, tree, project)
+    local position = tree:data()
+    if strategy ~= "dap" or position.type == "dir" then
+        return nil
+    end
+    if position.type == "file" then
         return {
             type = "scala",
             request = "launch",
@@ -146,6 +153,42 @@ local function get_strategy_config(strategy, position)
                 runType = "testFile",
                 path = position.path,
             },
+        }
+    end
+    local metals_arguments = nil
+    if position.type == "namespace" then
+        metals_arguments = {
+            testClass = utils.get_package_name(position.path) .. position.name,
+        }
+    end
+    if position.type == "test" then
+        local root = ScalaNeotestAdapter.root(position.path)
+        local parent = tree:parent():data()
+        vim.uri_from_fname(root)
+        -- Constructs ScalaTestSuitesDebugRequest request.
+        metals_arguments = {
+            target = { uri = "file:" .. root .. "/?id=" .. project .. "-test" },
+            requestData = {
+                suites = {
+                    {
+                        className = get_parent_name(parent),
+                        tests = { utils.get_position_name(position) },
+                    },
+                },
+                jvmOptions = {},
+                environmentVariables = {},
+            },
+        }
+    end
+    if metals_arguments ~= nil then
+        return {
+            type = "scala",
+            request = "launch",
+            -- NOTE: The `from_lens` is set here because nvim-metals passes the
+            -- complete `metals` param to metals server without modifying
+            -- (reading) it.
+            name = "from_lens",
+            metals = metals_arguments,
         }
     end
     return nil
@@ -166,7 +209,7 @@ function ScalaNeotestAdapter.build_spec(args)
     end
     local extra_args = vim.list_extend(get_args(), args.extra_args or {})
     local command = framework.build_command(runner, project, args.tree, utils.get_position_name(position), extra_args)
-    local strategy = get_strategy_config(args.strategy, position)
+    local strategy = get_strategy_config(args.strategy, args.tree, project)
     return { command = command, strategy = strategy }
 end
 
